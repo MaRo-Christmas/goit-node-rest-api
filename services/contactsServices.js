@@ -23,6 +23,14 @@ export async function removeContact(id) {
   return data;
 }
 
+export async function updateStatusContact(id, { favorite }) {
+  const [count, rows] = await Contact.update(
+    { favorite },
+    { where: { id }, returning: true }
+  );
+  if (count === 0) return null;
+  return rows[0].toJSON();
+}
 export async function updateContact(id, data) {
   const [count, rows] = await Contact.update(data, {
     where: { id },

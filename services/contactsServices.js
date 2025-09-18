@@ -1,55 +1,41 @@
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
-import crypto from "crypto";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const contactsPath = path.join(__dirname, "../db", "contacts.json");
-
-async function readContacts() {
-  const raw = await fs.readFile(contactsPath, "utf-8");
-  return JSON.parse(raw);
-}
-
-async function writeContacts(list) {
-  await fs.writeFile(contactsPath, JSON.stringify(list, null, 2), "utf-8");
-}
+import Contact from "../models/contact.js";
 
 export async function listContacts() {
-  return await readContacts();
+  const rows = await Contact.findAll({ order: [["created_at", "DESC"]] });
+  return rows.map((r) => r.toJSON());
 }
 
-export async function getContactById(contactId) {
-  const list = await readContacts();
-  return list.find((c) => String(c.id) === String(contactId)) ?? null;
+export async function getContactById(id) {
+  const row = await Contact.findByPk(id);
+  return row ? row.toJSON() : null;
 }
 
 export async function addContact(name, email, phone) {
-  const list = await readContacts();
-  const newContact = { id: crypto.randomUUID(), name, email, phone };
-  list.push(newContact);
-  await writeContacts(list);
-  return newContact;
+  const row = await Contact.create({ name, email, phone });
+  return row.toJSON();
 }
 
-export async function removeContact(contactId) {
-  const list = await readContacts();
-  const idx = list.findIndex((c) => String(c.id) === String(contactId));
-  if (idx === -1) return null;
-  const [removed] = list.splice(idx, 1);
-  await writeContacts(list);
-  return removed;
+export async function removeContact(id) {
+  const row = await Contact.findByPk(id);
+  if (!row) return null;
+  const data = row.toJSON();
+  await row.destroy();
+  return data;
 }
 
-export async function updateContact(contactId, data) {
-  const list = await readContacts();
-  const idx = list.findIndex((c) => String(c.id) === String(contactId));
-  if (idx === -1) return null;
-
-  const updated = { ...list[idx], ...data };
-  list[idx] = updated;
-  await writeContacts(list);
-  return updated;
+export async function updateStatusContact(id, { favorite }) {
+  const [count, rows] = await Contact.update(
+    { favorite },
+    { where: { id }, returning: true }
+  );
+  if (count === 0) return null;
+  return rows[0].toJSON();
+}
+export async function updateContact(id, data) {
+  const [count, rows] = await Contact.update(data, {
+    where: { id },
+    returning: true,
+  });
+  if (count === 0) return null;
+  return rows[0].toJSON();
 }

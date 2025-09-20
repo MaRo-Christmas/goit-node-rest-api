@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/auth", authRouter);
 app.use("/api/contacts", contactsRouter);
+app.use(express.static("public"));
 
 app.get("/", (_req, res) => {
   res.json({ status: "ok" });

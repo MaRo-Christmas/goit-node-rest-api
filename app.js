@@ -18,6 +18,8 @@ app.use("/api/auth", authRouter);
 
 app.use("/api/contacts", auth, contactsRouter);
 
+app.use(express.static("public"));
+
 app.use((_, res) => {
   res.status(404).json({ message: "Route not found" });
 });

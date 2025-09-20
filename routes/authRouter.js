@@ -8,6 +8,7 @@ import {
 import validateBody from "../helpers/validateBody.js";
 import { registerSchema, loginSchema } from "../schemas/authSchemas.js";
 import auth from "../middlewares/auth.js";
+import upload from "../middlewares/upload.js";
 
 const router = Router();
 

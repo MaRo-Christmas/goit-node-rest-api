@@ -1,21 +1,27 @@
 import { Router } from "express";
-import auth from "../middlewares/auth.js";
-import upload from "../middlewares/upload.js";
 import {
   register,
   login,
-  getCurrent,
   logout,
-  updateAvatar,
+  getCurrent,
+  verifyEmail,
+  resendVerifyEmail,
 } from "../controllers/authControllers.js";
+import auth from "../middlewares/auth.js";
+import {
+  validateBody,
+  resendVerifySchema,
+} from "../middlewares/validateBody.js";
 
 const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/current", auth, getCurrent);
 router.post("/logout", auth, logout);
+router.get("/current", auth, getCurrent);
 
-router.patch("/avatars", auth, upload.single("avatar"), updateAvatar);
+router.get("/verify/:verificationToken", verifyEmail);
+
+router.post("/verify", validateBody(resendVerifySchema), resendVerifyEmail);
 
 export default router;

@@ -1,43 +1,41 @@
 import express from "express";
+import morgan from "morgan";
 import cors from "cors";
-import logger from "morgan";
-import path from "path";
-import { fileURLToPath } from "url";
+import "dotenv/config";
 
-import authRouter from "./routes/authRouter.js";
+import usersRouter from "./routes/usersRoutes.js";
 import contactsRouter from "./routes/contactsRouter.js";
+import authRouter from "./routes/authRouter.js";
+import { initDB } from "./db/sequelize.js";
+import { verifySmtp } from "./services/email.js";
+import auth from "./middlewares/auth.js";
 
 const app = express();
 
-app.use(logger("dev"));
+app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+app.use("/api/auth", authRouter);
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use("/api/users", usersRouter);
+app.use("/api/contacts", auth, contactsRouter);
 
-app.use("/auth", authRouter);
-app.use("/api/contacts", contactsRouter);
-app.use(express.static("public"));
-
-app.get("/", (_req, res) => {
-  res.json({ status: "ok" });
+app.use((_, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
 
-app.use((req, res) => {
-  res.status(404).json({ message: "Not found" });
-});
-
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, next) => {
   const { status = 500, message = "Server error" } = err;
   res.status(status).json({ message });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
-export default app;
+(async () => {
+  await initDB();
+  await verifySmtp();
+  app.listen(PORT, () => {
+    console.log(`Server is running. Use our API on port: ${PORT}`);
+  });
+})();

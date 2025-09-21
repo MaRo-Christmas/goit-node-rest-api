@@ -4,17 +4,24 @@ import {
   login,
   logout,
   getCurrent,
+  verifyEmail,
+  resendVerifyEmail,
 } from "../controllers/authControllers.js";
-import validateBody from "../helpers/validateBody.js";
-import { registerSchema, loginSchema } from "../schemas/authSchemas.js";
 import auth from "../middlewares/auth.js";
+import {
+  validateBody,
+  resendVerifySchema,
+} from "../middlewares/validateBody.js";
 
 const router = Router();
 
-router.post("/register", validateBody(registerSchema), register);
-router.post("/login", validateBody(loginSchema), login);
-
+router.post("/register", register);
+router.post("/login", login);
 router.post("/logout", auth, logout);
 router.get("/current", auth, getCurrent);
+
+router.get("/verify/:verificationToken", verifyEmail);
+
+router.post("/verify", validateBody(resendVerifySchema), resendVerifyEmail);
 
 export default router;
